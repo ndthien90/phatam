@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinyin Learning - Học phát âm tiếng Trung</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .sound-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.5em;
+            transition: all 0.3s ease;
+        }
+
+        .sound-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-subtitle {
+            font-size: 1em;
+            opacity: 0.9;
+            margin-top: 5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .phoneme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .phoneme-card {
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .phoneme-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            transition: left 0.5s;
+        }
+
+        .phoneme-card:hover::before {
+            left: 100%;
+        }
+
+        .phoneme-card:hover {
+            transform: translateY(-8px) scale(1.05);
+            border-color: #4facfe;
+            box-shadow: 0 15px 30px rgba(79, 172, 254, 0.3);
+        }
+
+        .phoneme-card.playing {
+            background: linear-gradient(145deg, #4facfe, #00f2fe);
+            color: white;
+            border-color: #00f2fe;
+            transform: translateY(-8px) scale(1.05);
+            animation: pulse 0.6s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateY(-8px) scale(1.05); }
+            50% { transform: translateY(-8px) scale(1.15); }
+        }
+
+        .phoneme-text {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+            position: relative;
+            z-index: 1;
+        }
+
+        .phoneme-card.playing .phoneme-text {
+            color: white;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .practice-mode {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .practice-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .practice-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .random-practice {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 3em;
+            font-weight: bold;
+            color: #333;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            background: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .phoneme-grid {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+                gap: 10px;
+            }
+            
+            .phoneme-card {
+                padding: 15px 5px;
+                min-height: 60px;
+            }
+            
+            .phoneme-text {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <button class="sound-toggle" onclick="toggleSound()" id="soundToggle">🔊</button>
+            <h1>🎯 Pinyin Learning</h1>
+            <p>Học phát âm tiếng Trung một cách chuyên nghiệp</p>
+        </div>
+
+        <div class="content">
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalClicks">0</div>
+                    <div>Lần phát âm</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="consonantsLearned">0</div>
+                    <div>Phụ âm đã học</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="vowelsLearned">0</div>
+                    <div>Nguyên âm đã học</div>
+                </div>
+            </div>
+
+            <div class="practice-mode">
+                <h3 style="margin-bottom: 15px; color: #333;">🎲 Chế độ luyện tập ngẫu nhiên</h3>
+                <button class="practice-btn" onclick="randomConsonant()">Phụ âm ngẫu nhiên</button>
+                <button class="practice-btn" onclick="randomVowel()">Nguyên âm ngẫu nhiên</button>
+                <button class="practice-btn" onclick="randomAny()">Âm ngẫu nhiên</button>
+                <div class="random-practice" id="randomDisplay">Nhấn nút để bắt đầu</div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">🗣️ Bảng âm đầu</div>
+                    <div class="section-subtitle">23 phụ âm cơ bản trong tiếng Trung</div>
+                </div>
+                <div class="phoneme-grid" id="consonantGrid">
+                    <!-- Consonants will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">🎵 Bảng nguyên âm</div>
+                    <div class="section-subtitle">24 nguyên âm và tổ hợp âm trong tiếng Trung</div>
+                </div>
+                <div class="phoneme-grid" id="vowelGrid">
+                    <!-- Vowels will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 Pinyin Learning App | Học tiếng Trung hiệu quả với công nghệ hiện đại</p>
+        </div>
+    </div>
+
+    <script>
+        // Data for consonants and vowels
+        const consonants = [
+            'b', 'p', 'm', 'f', 'd', 't', 'n', 'l',
+            'g', 'k', 'h', 'j', 'q', 'x', 'zh', 'ch',
+            'sh', 'r', 'z', 'c', 's', 'y', 'w'
+        ];
+
+        const vowels = [
+            'a', 'o', 'e', 'i', 'u', 'ü', 'ai', 'ei',
+            'ui', 'ao', 'ou', 'iu', 'ie', 'üe', 'er', 'an',
+            'en', 'in', 'un', 'ün', 'ang', 'eng', 'ing', 'ong'
+        ];
+
+        let soundEnabled = true;
+        let stats = {
+            totalClicks: 0,
+            consonantsLearned: new Set(),
+            vowelsLearned: new Set()
+        };
+
+        // Load stats from localStorage if available
+        if (localStorage.getItem('pinyinStats')) {
+            const savedStats = JSON.parse(localStorage.getItem('pinyinStats'));
+            stats.totalClicks = savedStats.totalClicks || 0;
+            stats.consonantsLearned = new Set(savedStats.consonantsLearned || []);
+            stats.vowelsLearned = new Set(savedStats.vowelsLearned || []);
+        }
+
+        function saveStats() {
+            localStorage.setItem('pinyinStats', JSON.stringify({
+                totalClicks: stats.totalClicks,
+                consonantsLearned: Array.from(stats.consonantsLearned),
+                vowelsLearned: Array.from(stats.vowelsLearned)
+            }));
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('totalClicks').textContent = stats.totalClicks;
+            document.getElementById('consonantsLearned').textContent = stats.consonantsLearned.size;
+            document.getElementById('vowelsLearned').textContent = stats.vowelsLearned.size;
+        }
+
+        function createPhonemeCard(phoneme, isConsonant = true) {
+            const card = document.createElement('div');
+            card.className = 'phoneme-card';
+            card.innerHTML = `<span class="phoneme-text">${phoneme}</span>`;
+            
+            card.addEventListener('click', () => {
+                playPronunciation(phoneme, card, isConsonant);
+            });
+            
+            return card;
+        }
+
+        function playPronunciation(phoneme, cardElement, isConsonant) {
+            // Update stats
+            stats.totalClicks++;
+            if (isConsonant) {
+                stats.consonantsLearned.add(phoneme);
+            } else {
+                stats.vowelsLearned.add(phoneme);
+            }
+            updateStatsDisplay();
+            saveStats();
+
+            // Visual feedback
+            cardElement.classList.add('playing');
+            setTimeout(() => {
+                cardElement.classList.remove('playing');
+            }, 600);
+
+            // Audio synthesis
+            if (soundEnabled && 'speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(phoneme);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.7;
+                utterance.pitch = 1.2;
+                speechSynthesis.speak(utterance);
+            }
+
+            // Show phoneme info
+            showPhonemeInfo(phoneme, isConsonant);
+        }
+
+        function showPhonemeInfo(phoneme, isConsonant) {
+            const infoDiv = document.getElementById('randomDisplay');
+            infoDiv.innerHTML = `
+                <div style="font-size: 0.6em; color: #666; margin-bottom: 10px;">
+                    ${isConsonant ? 'Phụ âm' : 'Nguyên âm'}
+                </div>
+                <div style="color: #4facfe;">${phoneme}</div>
+            `;
+        }
+
+        function populateGrids() {
+            const consonantGrid = document.getElementById('consonantGrid');
+            const vowelGrid = document.getElementById('vowelGrid');
+
+            consonants.forEach(consonant => {
+                consonantGrid.appendChild(createPhonemeCard(consonant, true));
+            });
+
+            vowels.forEach(vowel => {
+                vowelGrid.appendChild(createPhonemeCard(vowel, false));
+            });
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const toggle = document.getElementById('soundToggle');
+            toggle.textContent = soundEnabled ? '🔊' : '🔇';
+            toggle.style.opacity = soundEnabled ? '1' : '0.6';
+        }
+
+        function randomConsonant() {
+            const randomIndex = Math.floor(Math.random() * consonants.length);
+            const phoneme = consonants[randomIndex];
+            const infoDiv = document.getElementById('randomDisplay');
+            
+            infoDiv.innerHTML = `
+                <div style="font-size: 0.6em; color: #666; margin-bottom: 10px;">
+                    Phụ âm ngẫu nhiên
+                </div>
+                <div style="color: #ff6b6b;">${phoneme}</div>
+            `;
+
+            if (soundEnabled && 'speechSynthesis' in window) {
+                setTimeout(() => {
+                    const utterance = new SpeechSynthesisUtterance(phoneme);
+                    utterance.lang = 'zh-CN';
+                    utterance.rate = 0.7;
+                    utterance.pitch = 1.2;
+                    speechSynthesis.speak(utterance);
+                }, 300);
+            }
+
+            stats.totalClicks++;
+            stats.consonantsLearned.add(phoneme);
+            updateStatsDisplay();
+            saveStats();
+        }
+
+        function randomVowel() {
+            const randomIndex = Math.floor(Math.random() * vowels.length);
+            const phoneme = vowels[randomIndex];
+            const infoDiv = document.getElementById('randomDisplay');
+            
+            infoDiv.innerHTML = `
+                <div style="font-size: 0.6em; color: #666; margin-bottom: 10px;">
+                    Nguyên âm ngẫu nhiên
+                </div>
+                <div style="color: #4ecdc4;">${phoneme}</div>
+            `;
+
+            if (soundEnabled && 'speechSynthesis' in window) {
+                setTimeout(() => {
+                    const utterance = new SpeechSynthesisUtterance(phoneme);
+                    utterance.lang = 'zh-CN';
+                    utterance.rate = 0.7;
+                    utterance.pitch = 1.2;
+                    speechSynthesis.speak(utterance);
+                }, 300);
+            }
+
+            stats.totalClicks++;
+            stats.vowelsLearned.add(phoneme);
+            updateStatsDisplay();
+            saveStats();
+        }
+
+        function randomAny() {
+            const allPhonemes = [...consonants, ...vowels];
+            const randomIndex = Math.floor(Math.random() * allPhonemes.length);
+            const phoneme = allPhonemes[randomIndex];
+            const isConsonant = consonants.includes(phoneme);
+            const infoDiv = document.getElementById('randomDisplay');
+            
+            infoDiv.innerHTML = `
+                <div style="font-size: 0.6em; color: #666; margin-bottom: 10px;">
+                    ${isConsonant ? 'Phụ âm' : 'Nguyên âm'} ngẫu nhiên
+                </div>
+                <div style="color: #845ec2;">${phoneme}</div>
+            `;
+
+            if (soundEnabled && 'speechSynthesis' in window) {
+                setTimeout(() => {
+                    const utterance = new SpeechSynthesisUtterance(phoneme);
+                    utterance.lang = 'zh-CN';
+                    utterance.rate = 0.7;
+                    utterance.pitch = 1.2;
+                    speechSynthesis.speak(utterance);
+                }, 300);
+            }
+
+            stats.totalClicks++;
+            if (isConsonant) {
+                stats.consonantsLearned.add(phoneme);
+            } else {
+                stats.vowelsLearned.add(phoneme);
+            }
+            updateStatsDisplay();
+            saveStats();
+        }
+
+        // Initialize the app
+        window.addEventListener('DOMContentLoaded', () => {
+            populateGrids();
+            updateStatsDisplay();
+            
+            // Welcome message
+            setTimeout(() => {
+                if (soundEnabled && 'speechSynthesis' in window) {
+                    const welcome = new SpeechSynthesisUtterance('欢迎学习拼音');
+                    welcome.lang = 'zh-CN';
+                    welcome.rate = 0.8;
+                    speechSynthesis.speak(welcome);
+                }
+            }, 1000);
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ') {
+                e.preventDefault();
+                randomAny();
+            } else if (e.key === 'c' || e.key === 'C') {
+                randomConsonant();
+            } else if (e.key === 'v' || e.key === 'V') {
+                randomVowel();
+            } else if (e.key === 's' || e.key === 'S') {
+                toggleSound();
+            }
+        });
+    </script>
+</body>
+</html>
